@@ -14,9 +14,12 @@
 
 import setuptools
 
+with open("README.md", "r", encoding="utf-8") as file_descriptor:
+    long_description = file_descriptor.read()
+
 setuptools.setup(
     name="torchsparks",
-    version="0.1.0",
+    version="0.1.1",
     packages=setuptools.find_packages(),
     install_requires=[
         "torch",
@@ -24,7 +27,7 @@ setuptools.setup(
     author="Chuanwise",
     author_email="i@chuanwise.cn",
     description="Tools for PyTorch in Pure Python.",
-    long_description=open("README.md").read(),
+    long_description=long_description,
     long_description_content_type="text/markdown",
     license="Apache Software License",
     url="https://github.com/chuanwise/torchsparks",
@@ -32,11 +35,5 @@ setuptools.setup(
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: Apache Software License",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
     ],
 )

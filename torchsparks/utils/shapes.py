@@ -14,13 +14,13 @@
 
 import torch
 
-import utils.pythons
+import torchsparks
 
 
 def shape(
         inputs,
         requirements=None,
-        default_shape_requirement="max",
+        default_requirement="max",
         truncation=True,
         need_len=True,
         return_dict=True,
@@ -28,7 +28,7 @@ def shape(
     if requirements is None:
         num_requirements = 0
     elif isinstance(requirements, (int, str)):
-        default_shape_requirement = requirements
+        default_requirement = requirements
         num_requirements = 0
     else:
         num_requirements = len(requirements)
@@ -48,7 +48,7 @@ def shape(
         """
         if isinstance(depth_inputs, torch.Tensor):
             return depth_inputs.size(), depth_inputs.size() if need_len else None
-        elif utils.pythons.iterable(depth_inputs):
+        elif torchsparks.utils.pythons.iterable(depth_inputs):
             element_shapes_and_lens = [shape_recursively(depth + 1, x) for x in depth_inputs]
 
             num_dimensions = max(len(x) for x, _ in element_shapes_and_lens)
@@ -63,8 +63,10 @@ def shape(
                 requirement_index = i + depth + 1
                 if requirement_index < num_requirements:
                     shape_requirement = requirements[requirement_index]
+                elif default_requirement == "raise":
+                    raise ValueError(f"Shape requirement not specified for dimension {requirement_index}")
                 else:
-                    shape_requirement = default_shape_requirement
+                    shape_requirement = default_requirement
                 if isinstance(shape_requirement, int):
                     if shape_requirement != -1:
                         requirement_value = shape_requirement
@@ -122,7 +124,7 @@ def shape(
 
 def pad(
         data, requirements=None,
-        default_shape_requirement="max",
+        default_requirement="max",
 
         unsqueeze_location="after",
 
@@ -150,11 +152,6 @@ def pad(
     - "min" or "max": the corresponding dimension of the tensor will be padded to the minimum or maximum
       of the original dimensions.
 
-    The parameter `empty_shape` can be:
-
-    - "ignore": ignore empty shape.
-    - "raise": raise an error if empty shape is found.
-
     """
 
     if data_device is not None and need_len and len_device is None:
@@ -162,7 +159,7 @@ def pad(
 
     # calculate shape
     shape_values, len_values = shape(
-        data, requirements, default_shape_requirement, truncation, return_dict=False, need_len=need_len
+        data, requirements, default_requirement, truncation, return_dict=False, need_len=need_len
     )
 
     # add a dimension for convenience
@@ -248,7 +245,7 @@ def pad(
                 return depth_data[indexes_after_pad], depth_lens[indexes_after_pad[:-1]]
             else:
                 return depth_data[indexes_after_pad], None
-        elif utils.pythons.iterable(depth_data):
+        elif torchsparks.utils.pythons.iterable(depth_data):
             # ignore truncated dimensions
             if len(depth_data) > shape_values[depth]:
                 if not truncation:
