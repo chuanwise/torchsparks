@@ -62,7 +62,7 @@ def shape(
 
     Examples::
 
-        >>> shape_values, shape_lengths = shape([
+        >>> shape_values, shape_lengths = torchsparks.utils.shapes.shape([
         ...     torch.randn(3, 4, 5),
         ...     [
         ...         torch.randn(3, 4, 5),
@@ -70,7 +70,7 @@ def shape(
         ...     ]
         ... ], [6])
         >>> print(shape_values)
-        [2, 3, 9, 5, 5]
+        [6, 3, 9, 5, 5]
         >>> print(shape_lengths)
         [torch.Size([3, 4, 5]), [torch.Size([3, 4, 5]), torch.Size([9, 4])]]
     """
@@ -256,14 +256,14 @@ def pad(
                 [3, 2, 2],
                 [0, 0, 0],
                 [0, 0, 0]], dtype=torch.int32)
-        >>> # tensor `padded_len > 0` can be used to mask the padded data
-        >>> print(padded_len > 0)
-        tensor([[ True,  True, False],
-                [ True,  True, False],
-                [False, False, False],
+        >>> # tensor `padded_len == 0` can be used to mask the padded data
+        >>> print(padded_len == 0)
+        tensor([[False, False,  True],
+                [False, False,  True],
                 [ True,  True,  True],
                 [False, False, False],
-                [False, False, False]])
+                [ True,  True,  True],
+                [ True,  True,  True]])
     """
 
     if data_device is not None and need_len and len_device is None:
