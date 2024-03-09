@@ -325,29 +325,30 @@ def pad(
 
             # build the len of the tensor
             num_len_shape = len_dimension_depth - depth
-            if need_len and depth <= len_dimension_depth:
-                if len(depth_lens) < num_len_shape:
-                    # get the shape of len tensor, its dimension is always depth_data.ndim - 1
-                    if unsqueeze_location == "before":
-                        depth_len_shape = [1] * (num_len_shape - len(depth_lens)) + list(depth_lens)
-                    elif unsqueeze_location == "after":
-                        depth_len_shape = list(depth_lens) + [1] * (num_len_shape - len(depth_lens))
+            if need_len:
+                if depth <= len_dimension_depth:
+                    if len(depth_lens) < num_len_shape:
+                        # get the shape of len tensor, its dimension is always depth_data.ndim - 1
+                        if unsqueeze_location == "before":
+                            depth_len_shape = [1] * (num_len_shape - len(depth_lens)) + list(depth_lens)
+                        elif unsqueeze_location == "after":
+                            depth_len_shape = list(depth_lens) + [1] * (num_len_shape - len(depth_lens))
+                        else:
+                            raise ValueError(f"Invalid value for `unsqueeze_location`: {unsqueeze_location}")
                     else:
-                        raise ValueError(f"Invalid value for `unsqueeze_location`: {unsqueeze_location}")
-                else:
-                    depth_len_shape = list(depth_lens)[:num_len_shape]
+                        depth_len_shape = list(depth_lens)[:num_len_shape]
 
-                # fill values and build tensor
-                depth_lens = min(shape_values[len_dimension_depth], depth_data.size(num_len_shape))
-                for i in reversed(depth_len_shape):
-                    depth_lens = [depth_lens] * i
-                depth_lens = torch.tensor(depth_lens, device=len_device, dtype=len_dtype)
-            elif depth_data.size(0) != shape_values[depth]:
-                raise ValueError(f"Dimension 0 of tensor has size {depth_data.size(0)}, "
-                                 f"which is not equal to the shape requirement {shape_values[depth]}, "
-                                 f"can not ignore the difference in their size! "
-                                 f"Try to increase `len_dimensions`, "
-                                 f"set it to `different` or set `need_len` to `False`! ")
+                    # fill values and build tensor
+                    depth_lens = min(shape_values[len_dimension_depth], depth_data.size(num_len_shape))
+                    for i in reversed(depth_len_shape):
+                        depth_lens = [depth_lens] * i
+                    depth_lens = torch.tensor(depth_lens, device=len_device, dtype=len_dtype)
+                elif depth_data.size(0) != shape_values[depth]:
+                    raise ValueError(f"Dimension 0 of tensor has size {depth_data.size(0)}, "
+                                     f"which is not equal to the shape requirement {shape_values[depth]}, "
+                                     f"can not ignore the difference in their size! "
+                                     f"Try to increase `len_dimensions`, "
+                                     f"set it to `different` or set `need_len` to `False`! ")
 
             # pad
             argument_pad = []
