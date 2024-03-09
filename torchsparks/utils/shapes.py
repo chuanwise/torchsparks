@@ -304,6 +304,8 @@ def pad(
             len_dimension_depth = len_dimension_recursively(0, inputs)
         elif not isinstance(len_dimensions, int) or len_dimensions < 0:
             raise ValueError(f"Invalid value for `len_dimensions`: {len_dimensions}")
+    else:
+        len_dimension_depth = 0
 
     def pad_recursively(depth, depth_data, depth_lens):
         if isinstance(depth_data, torch.Tensor):
