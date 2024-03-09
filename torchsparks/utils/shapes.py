@@ -163,7 +163,7 @@ def shape(
 
     # remove the first dimension
     shape_results = shape_results[1:]
-    len_results = len_results[0] if need_len else None
+    len_results = len_results[0] if need_len and len_results is not None else None
 
     if returns == "dict":
         return {
