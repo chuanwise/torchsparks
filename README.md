@@ -8,8 +8,7 @@ pip install torchsparks
 
 ## Docs
 
-> Waiting for the first release. 
-> Now you can check the source code documents temporally. 
+Click [here](https://chuanwise.feishu.cn/wiki/LDe5wAeQaiif9qkiY0hcKpAinuh?from=from_github_repo) to see the docs! 
 
 ## License
 
