@@ -11,10 +11,12 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+import typing
 
 import torch
 
 import torchsparks.utils.pythons
+import torch.nn.functional as F
 
 
 def shape(
@@ -176,6 +178,29 @@ def shape(
         raise ValueError(f"Invalid value for `returns`: {returns}")
 
 
+def default_pad(
+        input: torch.Tensor,
+        pad: typing.Sequence[int],
+        mode: str = "constant",
+        value: float = None
+):
+    size = input.size()
+    if size.numel():
+        return F.pad(input, pad, mode=mode, value=value)
+    if mode != "constant":
+        raise ValueError(f"Mode {mode} is not supported for empty tensors with shape: {size}.")
+
+    result_size = list(size)
+    for i in range(len(pad)):
+        result_size[-i // 2] += pad[i]
+
+    result = torch.zeros(size=result_size, device=input.device, dtype=input.dtype, requires_grad=input.requires_grad)
+    if value is not None:
+        result = result + value
+
+    return result
+
+
 def pad(
         inputs,
         requirement=None,
@@ -193,6 +218,7 @@ def pad(
         len_device=None,
         len_dtype=torch.int32,
         returns="tuple",
+        pad_fn=default_pad
 ):
     """
     Pad tensors to given shape.
@@ -204,15 +230,15 @@ def pad(
         unsqueeze_location: Where to unsqueeze the tensor to the required dimensions if the number of tensor's
             dimensions is less than the corresponding dimensions. Default: "after".
         padding_mode: Padding mode of the tensor, see docs of the parameter `mode` in function
-            `torch.nn.functional.pad() <https://pytorch.org/docs/stable/generated/torch.nn.functional.pad.html>`_.
+            `F.pad() <https://pytorch.org/docs/stable/generated/F.pad.html>`_.
             Default: "constant".
         padding_location: Where to pad the tensor, it will be used to build the parameter `pad` of function
-            `torch.nn.functional.pad()`. See docs of the parameter `pad` in function
-            `torch.nn.functional.pad() <https://pytorch.org/docs/stable/generated/torch.nn.functional.pad.html>`_.
+            `F.pad()`. See docs of the parameter `pad` in function
+            `F.pad() <https://pytorch.org/docs/stable/generated/F.pad.html>`_.
             Default: "after".
         padding_value: Padding value of the tensor, used when the `padding_mode` is "constant". See docs of the
-            parameter `value` in function `torch.nn.functional.pad()
-            <https://pytorch.org/docs/stable/generated/torch.nn.functional.pad.html>`_. Default: 0.
+            parameter `value` in function `F.pad()
+            <https://pytorch.org/docs/stable/generated/F.pad.html>`_. Default: 0.
         data_device: Device of the data tensor. Default: `None` (use the device of the input tensors, or default
             device if all input elements are numbers).
         data_dtype: Data type of the data tensor. Default: `None` (use the data type of the input tensor, or
@@ -226,6 +252,7 @@ def pad(
             deep are not the same, an error will be raised. Default: "different".
         len_device: Device of the length tensor. Default: `None` (use the device of the data tensor).
         len_dtype: Data type of the length tensor. Default: `torch.int32`.
+        pad_fn: Function to pad the tensor. Default: `default_pad`.
         returns: Whether to return a dictionary with keys "data" and "len", or a tuple of the data and length.
             Default: "tuple".
 
@@ -378,7 +405,7 @@ def pad(
                         raise ValueError(f"Invalid value for `truncation_location`: {truncation_location}")
                 argument_pad += [0, 0]
 
-            depth_data = torch.nn.functional.pad(depth_data, argument_pad, value=padding_value, mode=padding_mode)
+            depth_data = pad_fn(depth_data, argument_pad, value=padding_value, mode=padding_mode)
 
             # change dtype and device if required
             if data_dtype is not None:
@@ -388,7 +415,7 @@ def pad(
 
             if need_len and depth <= len_dimension_depth:
                 if depth < len_dimension_depth:
-                    depth_lens = torch.nn.functional.pad(
+                    depth_lens = pad_fn(
                         depth_lens, argument_pad[-2 * num_len_shape:], value=0, mode="constant"
                     )
                     return depth_data[indexes_after_pad], depth_lens[indexes_after_pad[:num_len_shape]]
@@ -451,15 +478,15 @@ def pad(
                 else:
                     raise ValueError(f"Invalid value for `padding_location`: {padding_location}")
 
-                current_data_results = torch.nn.functional.pad(
+                current_data_results = pad_fn(
                     current_data_results, argument_pad, value=padding_value, mode=padding_mode
                 )
                 if need_len and depth < len_dimension_depth:
-                    current_len_results = torch.nn.functional.pad(
+                    current_len_results = pad_fn(
                         current_len_results, argument_pad[-2 * len(current_len_results.size()):],
                         value=0, mode="constant"
                     )
-                    # current_len_results = torch.nn.functional.pad(
+                    # current_len_results = pad_fn(
                     #     current_len_results, argument_pad[2:], value=0, mode="constant"
                     # ) if need_len else None
 
