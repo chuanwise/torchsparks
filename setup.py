@@ -19,7 +19,7 @@ with open("README.md", "r", encoding="utf-8") as file_descriptor:
 
 setuptools.setup(
     name="torchsparks",
-    version="0.1.4",
+    version="0.1.5",
     packages=setuptools.find_packages(),
     install_requires=[
         "torch",
